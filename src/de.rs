@@ -18,7 +18,9 @@ pub struct Deserializer<'a> {
 
 impl Deserializer<'_> {
     pub fn new(input: &str) -> Deserializer {
-        Deserializer { tokenizer: token::Tokenizer::new(input) }
+        Deserializer {
+            tokenizer: token::Tokenizer::new(input),
+        }
     }
 
     pub fn parse(&mut self) -> Result<Option<Value>, token::Error> {
@@ -44,7 +46,7 @@ impl Deserializer<'_> {
 
         // empty object
         if self.tokenizer.eat_token(token::Token::RightBrace) {
-            return Ok(Some(Value::Object(object)))
+            return Ok(Some(Value::Object(object)));
         }
 
         loop {
@@ -56,14 +58,16 @@ impl Deserializer<'_> {
 
                     // :
                     if !self.tokenizer.eat_token(token::Token::Colon) {
-                        break
+                        break;
                     }
 
                     self.tokenizer.eat_whitespaces();
 
                     // value
                     match self.value()? {
-                        Some(value) => { object.insert(key, value); },
+                        Some(value) => {
+                            object.insert(key, value);
+                        }
                         _ => break,
                     }
 
@@ -71,14 +75,14 @@ impl Deserializer<'_> {
 
                     // }
                     if self.tokenizer.eat_token(token::Token::RightBrace) {
-                        return Ok(Some(Value::Object(object)))
+                        return Ok(Some(Value::Object(object)));
                     }
 
                     // ,
                     if !self.tokenizer.eat_token(token::Token::Comma) {
-                        break
+                        break;
                     }
-                },
+                }
                 _ => break,
             }
         }
@@ -87,20 +91,20 @@ impl Deserializer<'_> {
     }
 
     fn array(&mut self) -> Result<Option<Value>, token::Error> {
-        let mut array = vec!();
+        let mut array = vec![];
 
         self.tokenizer.eat_whitespaces();
 
         // empty array
         if self.tokenizer.eat_token(token::Token::RightBracket) {
-            return Ok(Some(Value::Array(array)))
+            return Ok(Some(Value::Array(array)));
         }
 
         loop {
             self.tokenizer.eat_whitespaces();
 
             match self.value()? {
-                Some(value) => { array.push(value) },
+                Some(value) => array.push(value),
                 _ => return Err(token::Error::InvalidToken),
             }
 
@@ -108,12 +112,12 @@ impl Deserializer<'_> {
 
             // ]
             if self.tokenizer.eat_token(token::Token::RightBracket) {
-                return Ok(Some(Value::Array(array)))
+                return Ok(Some(Value::Array(array)));
             }
 
             // ,
             if !self.tokenizer.eat_token(token::Token::Comma) {
-                break
+                break;
             }
         }
 
@@ -140,10 +144,13 @@ mod tests {
         let mut deserializer = Deserializer::new(input);
         match deserializer.parse().unwrap() {
             Some(Value::Object(object)) => {
-                assert_eq!(object["name"], Value::String("jjsonsonpapaparser".to_string()));
+                assert_eq!(
+                    object["name"],
+                    Value::String("jjsonsonpapaparser".to_string())
+                );
                 assert_eq!(object["desc"], Value::String("toy json parser".to_string()));
                 assert_eq!(object.get("missing_key"), None);
-            },
+            }
             _ => panic!("Should be Object"),
         }
 
@@ -162,14 +169,20 @@ mod tests {
             Some(Value::Object(object)) => {
                 match object.get("name").unwrap() {
                     Value::Object(nested_object) => {
-                        assert_eq!(nested_object["nested_name"], Value::String("nested_name_value".to_string()));
-                        assert_eq!(nested_object["nested_desc"], Value::String("nested_desc_value".to_string()));
-                    },
+                        assert_eq!(
+                            nested_object["nested_name"],
+                            Value::String("nested_name_value".to_string())
+                        );
+                        assert_eq!(
+                            nested_object["nested_desc"],
+                            Value::String("nested_desc_value".to_string())
+                        );
+                    }
                     _ => panic!("Should be nested Object"),
                 }
                 assert_eq!(object["desc"], Value::String("toy json parser".to_string()));
                 assert_eq!(object.get("missing_key"), None);
-            },
+            }
             _ => panic!("Should be Object"),
         }
 
@@ -189,7 +202,7 @@ mod tests {
                 assert_eq!(array[1], Value::Number("2".to_string()));
                 assert_eq!(array[2], Value::Bool(true));
                 assert_eq!(array[3], Value::String("abcd".to_string()));
-            },
+            }
             _ => panic!("Should be Array"),
         }
     }

@@ -3,7 +3,6 @@
 ///   "name": "jjsonsonpapaparser",
 ///   "desc": "toy json parser",
 /// }
-
 use std::str;
 use std::string;
 
@@ -55,7 +54,9 @@ pub struct Tokenizer<'a> {
 
 impl Tokenizer<'_> {
     pub fn new(input: &str) -> Tokenizer {
-        Tokenizer { chars: input.char_indices() }
+        Tokenizer {
+            chars: input.char_indices(),
+        }
     }
 
     pub fn next(&mut self) -> Result<Option<Token>, Error> {
@@ -63,30 +64,28 @@ impl Tokenizer<'_> {
             Some((_, '{')) => {
                 self.eat_one();
                 Ok(Some(Token::LeftBrace))
-            },
+            }
             Some((_, '}')) => {
                 self.eat_one();
                 Ok(Some(Token::RightBrace))
-            },
+            }
             Some((_, '[')) => {
                 self.eat_one();
                 Ok(Some(Token::LeftBracket))
-            },
+            }
             Some((_, ']')) => {
                 self.eat_one();
                 Ok(Some(Token::RightBracket))
-            },
+            }
             Some((_, ',')) => {
                 self.eat_one();
                 Ok(Some(Token::Comma))
-            },
+            }
             Some((_, ':')) => {
                 self.eat_one();
                 Ok(Some(Token::Colon))
-            },
-            Some((_, '"')) => {
-                self.string()
-            },
+            }
+            Some((_, '"')) => self.string(),
             Some((_, c)) if c.is_digit(10) || c == '-' => self.number(),
             Some((_, c)) if c == 't' || c == 'f' => self.boolean(),
             Some((_, 'n')) => self.null(),
@@ -113,7 +112,7 @@ impl Tokenizer<'_> {
     fn eat_one(&mut self) -> bool {
         match self.one() {
             Some(_) => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -123,7 +122,7 @@ impl Tokenizer<'_> {
                 self.eat_one();
                 true
             }
-            _ => false
+            _ => false,
         }
     }
 
@@ -136,11 +135,11 @@ impl Tokenizer<'_> {
 
             if let Some((_, ch)) = chars.next() {
                 if c == ch {
-                    continue
+                    continue;
                 }
             }
 
-            return false
+            return false;
         }
 
         for _ in 0..i {
@@ -156,7 +155,7 @@ impl Tokenizer<'_> {
 
     pub fn eat_whitespaces(&mut self) -> bool {
         if !self.eat_whitespace() {
-            return false
+            return false;
         }
 
         while self.eat_whitespace() {}
@@ -180,35 +179,35 @@ impl Tokenizer<'_> {
                         Some((_, '"')) => {
                             self.one();
                             val.push('"');
-                        },
+                        }
                         Some((_, '\\')) => {
                             self.one();
                             val.push('\\');
-                        },
+                        }
                         Some((_, '/')) => {
                             self.one();
                             val.push('/');
-                        },
+                        }
                         Some((_, 'b')) => {
                             self.one();
                             val.push('\x08')
-                        },
+                        }
                         Some((_, 'f')) => {
                             self.one();
                             val.push('\x0C');
-                        },
+                        }
                         Some((_, 'n')) => {
                             self.one();
                             val.push('\n');
-                        },
+                        }
                         Some((_, 'r')) => {
                             self.one();
                             val.push('\x0D');
-                        },
+                        }
                         Some((_, 't')) => {
                             self.one();
                             val.push('\t');
-                        },
+                        }
                         // TODO: implement `u`
                         _ => return Err(Error::InvalidEscapeChar),
                     }
@@ -216,11 +215,11 @@ impl Tokenizer<'_> {
                 Some((_, '"')) => {
                     self.one();
                     return Ok(Some(Token::String(val)));
-                },
+                }
                 Some((_, c)) => {
                     self.one();
                     val.push(c);
-                },
+                }
                 None => return Err(Error::EOF),
             }
         }
@@ -243,7 +242,7 @@ impl Tokenizer<'_> {
             Some((_, '.')) => {
                 self.one();
                 val.push('.');
-            },
+            }
             _ => return Ok(Some(Token::Number(val))),
         }
         match self.fraction() {
@@ -256,11 +255,11 @@ impl Tokenizer<'_> {
             Some((_, 'e')) => {
                 self.one();
                 val.push('e');
-            },
+            }
             Some((_, 'E')) => {
                 self.one();
                 val.push('E');
-            },
+            }
             _ => return Ok(Some(Token::Number(val))),
         }
         match self.exponent() {
@@ -268,7 +267,7 @@ impl Tokenizer<'_> {
             _ => return Err(Error::InvalidNumber),
         }
 
-        return Ok(Some(Token::Number(val)))
+        return Ok(Some(Token::Number(val)));
     }
 
     fn integer(&mut self) -> Result<Option<Token>, Error> {
@@ -285,7 +284,7 @@ impl Tokenizer<'_> {
             self.eat_one();
             val.push('0');
 
-            return Ok(Some(Token::Integer(val)))
+            return Ok(Some(Token::Integer(val)));
         }
 
         loop {
@@ -293,7 +292,7 @@ impl Tokenizer<'_> {
                 Some((_, c)) if c.is_digit(10) => {
                     self.eat_one();
                     val.push(c);
-                },
+                }
                 _ => return Ok(Some(Token::Integer(val))),
             };
         }
@@ -307,7 +306,7 @@ impl Tokenizer<'_> {
                 self.one();
                 val.push(c);
             } else {
-                return Err(Error::InvalidNumber)
+                return Err(Error::InvalidNumber);
             }
         }
 
@@ -317,14 +316,14 @@ impl Tokenizer<'_> {
                     self.eat_one();
                     val.push(c);
                 } else {
-                    break
+                    break;
                 }
             } else {
-                break
+                break;
             }
         }
 
-        return Ok(Some(Token::Fraction(val)))
+        return Ok(Some(Token::Fraction(val)));
     }
 
     fn exponent(&mut self) -> Result<Option<Token>, Error> {
@@ -340,8 +339,8 @@ impl Tokenizer<'_> {
         match self.fraction() {
             Ok(Some(Token::Fraction(f))) => {
                 val.push_str(f.as_str());
-                return Ok(Some(Token::Exponent(val)))
-            },
+                return Ok(Some(Token::Exponent(val)));
+            }
             _ => return Err(Error::InvalidNumber),
         }
     }
@@ -382,19 +381,31 @@ mod tests {
         tokenizer.eat_whitespaces();
         assert_eq!(tokenizer.next(), Ok(Some(Token::LeftBrace)));
         tokenizer.eat_whitespaces();
-        assert_eq!(tokenizer.next(), Ok(Some(Token::String("name".to_string()))));
+        assert_eq!(
+            tokenizer.next(),
+            Ok(Some(Token::String("name".to_string())))
+        );
         tokenizer.eat_whitespaces();
         assert_eq!(tokenizer.next(), Ok(Some(Token::Colon)));
         tokenizer.eat_whitespaces();
-        assert_eq!(tokenizer.next(), Ok(Some(Token::String("jjsonsonpapaparser".to_string()))));
+        assert_eq!(
+            tokenizer.next(),
+            Ok(Some(Token::String("jjsonsonpapaparser".to_string())))
+        );
         tokenizer.eat_whitespaces();
         assert_eq!(tokenizer.next(), Ok(Some(Token::Comma)));
         tokenizer.eat_whitespaces();
-        assert_eq!(tokenizer.next(), Ok(Some(Token::String("desc".to_string()))));
+        assert_eq!(
+            tokenizer.next(),
+            Ok(Some(Token::String("desc".to_string())))
+        );
         tokenizer.eat_whitespaces();
         assert_eq!(tokenizer.next(), Ok(Some(Token::Colon)));
         tokenizer.eat_whitespaces();
-        assert_eq!(tokenizer.next(), Ok(Some(Token::String("toy json parser".to_string()))));
+        assert_eq!(
+            tokenizer.next(),
+            Ok(Some(Token::String("toy json parser".to_string())))
+        );
         tokenizer.eat_whitespaces();
         assert_eq!(tokenizer.next(), Ok(Some(Token::Comma)));
         tokenizer.eat_whitespaces();
@@ -406,7 +417,9 @@ mod tests {
     #[test]
     fn test_tokenizer_peek() {
         let input = "abcd";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
         assert_eq!(tokenizer.peek(), Some((0, 'a')));
         assert_eq!(tokenizer.peek(), Some((0, 'a')));
@@ -416,7 +429,9 @@ mod tests {
     #[test]
     fn test_tokenizer_one() {
         let input = "abc";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
         assert_eq!(tokenizer.one(), Some((0, 'a')));
         assert_eq!(tokenizer.one(), Some((1, 'b')));
@@ -427,7 +442,9 @@ mod tests {
     #[test]
     fn test_tokenizer_eat_one() {
         let input = "abc";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
         assert!(tokenizer.eat_one());
         assert!(tokenizer.eat_one());
@@ -438,7 +455,9 @@ mod tests {
     #[test]
     fn test_tokenizer_eatc() {
         let input = "abc";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
         assert!(tokenizer.eatc('a'));
         assert!(tokenizer.eatc('b'));
@@ -470,57 +489,102 @@ mod tests {
     #[test]
     fn test_tokenizer_string() {
         let input = "\"abcde  f \"";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.string(), Ok(Some(Token::String("abcde  f ".to_string()))));
+        assert_eq!(
+            tokenizer.string(),
+            Ok(Some(Token::String("abcde  f ".to_string())))
+        );
     }
 
     #[test]
     fn test_tokenizer_number() {
         let input = "100";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.number(), Ok(Some(Token::Number(input.to_string()))));
+        assert_eq!(
+            tokenizer.number(),
+            Ok(Some(Token::Number(input.to_string())))
+        );
 
         let input = "-100";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.number(), Ok(Some(Token::Number(input.to_string()))));
+        assert_eq!(
+            tokenizer.number(),
+            Ok(Some(Token::Number(input.to_string())))
+        );
 
         let input = "-100.000";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.number(), Ok(Some(Token::Number(input.to_string()))));
+        assert_eq!(
+            tokenizer.number(),
+            Ok(Some(Token::Number(input.to_string())))
+        );
 
         let input = "-100.001e10";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.number(), Ok(Some(Token::Number(input.to_string()))));
+        assert_eq!(
+            tokenizer.number(),
+            Ok(Some(Token::Number(input.to_string())))
+        );
     }
 
     #[test]
     fn test_tokenizer_integer() {
         let input = "100";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.integer(), Ok(Some(Token::Integer(input.to_string()))));
+        assert_eq!(
+            tokenizer.integer(),
+            Ok(Some(Token::Integer(input.to_string())))
+        );
 
         let input = "001";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.integer(), Ok(Some(Token::Integer('0'.to_string()))));
+        assert_eq!(
+            tokenizer.integer(),
+            Ok(Some(Token::Integer('0'.to_string())))
+        );
     }
 
     #[test]
     fn test_tokenizer_fraction() {
         let input = "100";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.fraction(), Ok(Some(Token::Fraction(input.to_string()))));
+        assert_eq!(
+            tokenizer.fraction(),
+            Ok(Some(Token::Fraction(input.to_string())))
+        );
 
         let input = "010";
-        let mut tokenizer = Tokenizer { chars: input.char_indices() };
+        let mut tokenizer = Tokenizer {
+            chars: input.char_indices(),
+        };
 
-        assert_eq!(tokenizer.fraction(), Ok(Some(Token::Fraction(input.to_string()))));
+        assert_eq!(
+            tokenizer.fraction(),
+            Ok(Some(Token::Fraction(input.to_string())))
+        );
     }
 }

@@ -4,7 +4,7 @@
 //   "key" : "value"
 // }
 
-mod token;
 mod de;
+mod token;
 
 pub use de::Deserializer;
